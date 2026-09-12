@@ -1,0 +1,730 @@
+# yaml-language-server: $schema=https://render.com/schema/render.yaml.json
+
+projects:
+  - name: eventalpha-beta
+
+    environments:
+      - name: beta
+
+        # ----------------------------------------------------------
+        # SHARED NON-SECRET SIGNAL / TRADE CONFIGURATION
+        # ----------------------------------------------------------
+
+        envVarGroups:
+          - name: eventalpha-signal-config
+            envVars:
+              - key: TECHNICAL_INTERVALS
+                value: 3m,5m,15m,30m,60m
+
+              - key: SIGNAL_MIN_READY_INTERVALS
+                value: "2"
+
+              - key: SIGNAL_BUY_THRESHOLD
+                value: "65"
+
+              - key: SIGNAL_WATCH_THRESHOLD
+                value: "45"
+
+              - key: SIGNAL_RSI_OVERSOLD
+                value: "30"
+
+              - key: SIGNAL_RSI_OVERBOUGHT
+                value: "70"
+
+              - key: SIGNAL_WEIGHT_TREND
+                value: "30"
+
+              - key: SIGNAL_WEIGHT_MACD
+                value: "25"
+
+              - key: SIGNAL_WEIGHT_MOMENTUM
+                value: "20"
+
+              - key: SIGNAL_WEIGHT_RSI
+                value: "15"
+
+              - key: SIGNAL_WEIGHT_BOLLINGER
+                value: "10"
+
+              - key: MARKET_MEMORY_INTERVAL
+                value: 5m
+
+              - key: MARKET_MEMORY_PATTERN_CANDLES
+                value: "6"
+
+              - key: MARKET_MEMORY_FORWARD_CANDLES
+                value: "3"
+
+              - key: MARKET_MEMORY_HISTORY_LIMIT
+                value: "3000"
+
+              - key: MARKET_MEMORY_MAX_GAP_SECONDS
+                value: "300"
+
+              - key: MARKET_MEMORY_MIN_MATCHES
+                value: "10"
+
+              - key: MARKET_MEMORY_SIMILARITY_THRESHOLD
+                value: "0.85"
+
+              - key: SIGNAL_CONFIDENCE_TECHNICAL_READINESS_WEIGHT
+                value: "30"
+
+              - key: SIGNAL_CONFIDENCE_TECHNICAL_AGREEMENT_WEIGHT
+                value: "30"
+
+              - key: SIGNAL_CONFIDENCE_MEMORY_READINESS_WEIGHT
+                value: "15"
+
+              - key: SIGNAL_CONFIDENCE_MEMORY_ALIGNMENT_WEIGHT
+                value: "25"
+
+              - key: SIGNAL_MAX_TECHNICAL_AGE_SECONDS
+                value: "300"
+
+              - key: RISK_ATR_LOW_THRESHOLD
+                value: "0.159084725932077"
+
+              - key: RISK_ATR_HIGH_THRESHOLD
+                value: "0.309180709277771"
+
+              - key: RISK_MOMENTUM_LOW_THRESHOLD
+                value: "0.137646249139703"
+
+              - key: RISK_MOMENTUM_HIGH_THRESHOLD
+                value: "0.73864011079602"
+
+              - key: RISK_WEIGHT_VOLATILITY
+                value: "0.4"
+
+              - key: RISK_WEIGHT_MOMENTUM
+                value: "0.35"
+
+              - key: RISK_WEIGHT_TECHNICAL_DISAGREEMENT
+                value: "0.25"
+
+              - key: RISK_MEDIUM_THRESHOLD
+                value: "0.4"
+
+              - key: RISK_HIGH_THRESHOLD
+                value: "0.7"
+
+              # Trade Plan V1
+              - key: TRADE_PLAN_INTERVAL
+                value: 5m
+
+              - key: TRADE_PLAN_CONFIRMATION_INTERVAL
+                value: 15m
+
+              - key: TRADE_PLAN_ENTRY_ATR_MULTIPLIER
+                value: "0.20"
+
+              - key: TRADE_PLAN_MAX_CHASE_ATR_MULTIPLIER
+                value: "0.60"
+
+              - key: TRADE_PLAN_STOP_ATR_MULTIPLIER
+                value: "1.25"
+
+              - key: TRADE_PLAN_TARGET1_RR
+                value: "1.5"
+
+              - key: TRADE_PLAN_TARGET2_RR
+                value: "2.0"
+
+              - key: MARKET_TIMEZONE
+                value: Asia/Kolkata
+
+              - key: TRADE_PLAN_LAST_ENTRY_TIME
+                value: "14:45"
+
+              - key: TRADE_PLAN_HARD_EXIT_TIME
+                value: "15:20"
+
+              - key: TRADE_PLAN_MAX_PRICE_AGE_SECONDS
+                value: "75"
+
+        services:
+
+          # ========================================================
+          # RENDER KEY VALUE
+          # ========================================================
+
+          - type: keyvalue
+            name: eventalpha-beta-kv
+            plan: 256mb
+            region: singapore
+
+            # No public Redis access.
+            ipAllowList: []
+
+            maxmemoryPolicy: noeviction
+            persistenceMode: journal-snapshot
+
+          # ========================================================
+          # API
+          # ========================================================
+
+          - type: web
+            name: eventalpha-beta-api
+            runtime: docker
+            plan: 0.5c-512mb
+            region: singapore
+
+            dockerfilePath: ./Dockerfile
+            dockerContext: .
+
+            autoDeployTrigger: off
+
+            envVars:
+              - key: NODE_ENV
+                value: production
+
+              - key: PORT
+                value: "10000"
+
+              # MongoDB Atlas connection string.
+              # Render will ask for this during initial Blueprint setup.
+              - key: MONGODB_URI
+                sync: false
+
+              - key: REDIS_URL
+                fromService:
+                  type: keyvalue
+                  name: eventalpha-beta-kv
+                  property: connectionString
+
+              # Existing Groww production/beta token.
+              # Enter it in Render, never in render.yaml.
+              - key: GROWW_ACCESS_TOKEN
+                sync: false
+
+              # New secret generated by Render.
+              - key: JWT_SECRET
+                generateValue: true
+
+              # Enter the same values currently used locally.
+              - key: BCRYPT_ROUNDS
+                sync: false
+
+              - key: JWT_EXPIRES_IN
+                sync: false
+
+              - key: GROWW_INSTRUMENT_URL
+                value: https://growwapi-assets.groww.in/instruments/instrument.csv
+
+              - key: COMPANY_EQUITY_ISIN_PREFIXES
+                value: INE
+
+              - key: MARKET_FEED_MAX_SUBSCRIPTIONS
+                value: "1000"
+
+              - fromGroup: eventalpha-signal-config
+
+          # ========================================================
+          # FRONTEND
+          # ========================================================
+
+          - type: web
+            name: eventalpha-beta-frontend
+            runtime: static
+
+            rootDir: frontend
+
+            buildCommand: npm ci && npm run build
+            staticPublishPath: dist
+
+            autoDeployTrigger: off
+
+            envVars:
+              - key: VITE_DISCOVER_REFRESH_MS
+                value: "60000"
+
+              # Render exposes the API's generated public URL here.
+              - key: VITE_API_BASE_URL
+                fromService:
+                  type: web
+                  name: eventalpha-beta-api
+                  envVarKey: RENDER_EXTERNAL_URL
+
+            routes:
+              # React/Vite SPA fallback
+              - type: rewrite
+                source: /*
+                destination: /index.html
+
+          # ========================================================
+          # MARKET FEED - SHARD 0
+          # ========================================================
+
+          - type: worker
+            name: eventalpha-beta-feed-0
+            runtime: docker
+            plan: 0.5c-512mb
+            region: singapore
+
+            rootDir: feed-worker
+            dockerfilePath: ./Dockerfile
+            dockerContext: .
+
+            autoDeployTrigger: off
+
+            envVars:
+              - key: FEED_SHARD_ID
+                value: "0"
+
+              - key: FEED_SHARD_COUNT
+                value: "3"
+
+              - key: FEED_RECONNECT_DELAY_SECONDS
+                value: "10"
+
+              - key: FEED_LTP_STALE_SECONDS
+                value: "30"
+
+              - key: FEED_INITIAL_LTP_TIMEOUT_SECONDS
+                value: "60"
+
+              - key: GROWW_NATS_CONNECT_TIMEOUT_SECONDS
+                value: "10"
+
+              - key: FEED_MODE
+                value: REST
+
+              - key: REST_POLL_SECONDS
+                value: "60"
+
+              - key: REST_BATCH_SIZE
+                value: "50"
+
+              - key: REST_BATCH_DELAY_SECONDS
+                value: "1"
+
+              - key: MARKET_TIMEZONE
+                value: Asia/Kolkata
+
+              - key: MARKET_OPEN_TIME
+                value: "09:15"
+
+              - key: MARKET_CLOSE_TIME
+                value: "15:30"
+
+              - key: TICK_STREAM_NAME
+                value: market:ticks
+
+              - key: TICK_STREAM_MAXLEN
+                value: "500000"
+
+              - key: MONGODB_URI
+                fromService:
+                  type: web
+                  name: eventalpha-beta-api
+                  envVarKey: MONGODB_URI
+
+              - key: GROWW_ACCESS_TOKEN
+                fromService:
+                  type: web
+                  name: eventalpha-beta-api
+                  envVarKey: GROWW_ACCESS_TOKEN
+
+              - key: REDIS_URL
+                fromService:
+                  type: keyvalue
+                  name: eventalpha-beta-kv
+                  property: connectionString
+
+          # ========================================================
+          # MARKET FEED - SHARD 1
+          # ========================================================
+
+          - type: worker
+            name: eventalpha-beta-feed-1
+            runtime: docker
+            plan: 0.5c-512mb
+            region: singapore
+
+            rootDir: feed-worker
+            dockerfilePath: ./Dockerfile
+            dockerContext: .
+
+            autoDeployTrigger: off
+
+            envVars:
+              - key: FEED_SHARD_ID
+                value: "1"
+
+              - key: FEED_SHARD_COUNT
+                value: "3"
+
+              - key: FEED_RECONNECT_DELAY_SECONDS
+                value: "10"
+
+              - key: FEED_LTP_STALE_SECONDS
+                value: "30"
+
+              - key: FEED_INITIAL_LTP_TIMEOUT_SECONDS
+                value: "60"
+
+              - key: GROWW_NATS_CONNECT_TIMEOUT_SECONDS
+                value: "10"
+
+              - key: FEED_MODE
+                value: REST
+
+              - key: REST_POLL_SECONDS
+                value: "60"
+
+              - key: REST_BATCH_SIZE
+                value: "50"
+
+              - key: REST_BATCH_DELAY_SECONDS
+                value: "1"
+
+              - key: MARKET_TIMEZONE
+                value: Asia/Kolkata
+
+              - key: MARKET_OPEN_TIME
+                value: "09:15"
+
+              - key: MARKET_CLOSE_TIME
+                value: "15:30"
+
+              - key: TICK_STREAM_NAME
+                value: market:ticks
+
+              - key: TICK_STREAM_MAXLEN
+                value: "500000"
+
+              - key: MONGODB_URI
+                fromService:
+                  type: web
+                  name: eventalpha-beta-api
+                  envVarKey: MONGODB_URI
+
+              - key: GROWW_ACCESS_TOKEN
+                fromService:
+                  type: web
+                  name: eventalpha-beta-api
+                  envVarKey: GROWW_ACCESS_TOKEN
+
+              - key: REDIS_URL
+                fromService:
+                  type: keyvalue
+                  name: eventalpha-beta-kv
+                  property: connectionString
+
+          # ========================================================
+          # MARKET FEED - SHARD 2
+          # ========================================================
+
+          - type: worker
+            name: eventalpha-beta-feed-2
+            runtime: docker
+            plan: 0.5c-512mb
+            region: singapore
+
+            rootDir: feed-worker
+            dockerfilePath: ./Dockerfile
+            dockerContext: .
+
+            autoDeployTrigger: off
+
+            envVars:
+              - key: FEED_SHARD_ID
+                value: "2"
+
+              - key: FEED_SHARD_COUNT
+                value: "3"
+
+              - key: FEED_RECONNECT_DELAY_SECONDS
+                value: "10"
+
+              - key: FEED_LTP_STALE_SECONDS
+                value: "30"
+
+              - key: FEED_INITIAL_LTP_TIMEOUT_SECONDS
+                value: "60"
+
+              - key: GROWW_NATS_CONNECT_TIMEOUT_SECONDS
+                value: "10"
+
+              - key: FEED_MODE
+                value: REST
+
+              - key: REST_POLL_SECONDS
+                value: "60"
+
+              - key: REST_BATCH_SIZE
+                value: "50"
+
+              - key: REST_BATCH_DELAY_SECONDS
+                value: "1"
+
+              - key: MARKET_TIMEZONE
+                value: Asia/Kolkata
+
+              - key: MARKET_OPEN_TIME
+                value: "09:15"
+
+              - key: MARKET_CLOSE_TIME
+                value: "15:30"
+
+              - key: TICK_STREAM_NAME
+                value: market:ticks
+
+              - key: TICK_STREAM_MAXLEN
+                value: "500000"
+
+              - key: MONGODB_URI
+                fromService:
+                  type: web
+                  name: eventalpha-beta-api
+                  envVarKey: MONGODB_URI
+
+              - key: GROWW_ACCESS_TOKEN
+                fromService:
+                  type: web
+                  name: eventalpha-beta-api
+                  envVarKey: GROWW_ACCESS_TOKEN
+
+              - key: REDIS_URL
+                fromService:
+                  type: keyvalue
+                  name: eventalpha-beta-kv
+                  property: connectionString
+
+          # ========================================================
+          # CANDLE WORKER
+          # ========================================================
+
+          - type: worker
+            name: eventalpha-beta-candle
+            runtime: docker
+            plan: 0.5c-512mb
+            region: singapore
+
+            rootDir: candle-worker
+            dockerfilePath: ./Dockerfile
+            dockerContext: .
+
+            autoDeployTrigger: off
+
+            envVars:
+              - key: TICK_STREAM_NAME
+                value: market:ticks
+
+              - key: CANDLE_CONSUMER_GROUP
+                value: candle-workers
+
+              # One candle worker instance for beta.
+              - key: CANDLE_CONSUMER_NAME
+                value: eventalpha-beta-candle-1
+
+              - key: CANDLE_PENDING_MIN_IDLE_MS
+                value: "120000"
+
+              - key: CANDLE_PENDING_RECOVERY_COUNT
+                value: "100"
+
+              - key: CANDLE_PENDING_RECOVERY_INTERVAL_SECONDS
+                value: "30"
+
+              - key: MONGODB_URI
+                fromService:
+                  type: web
+                  name: eventalpha-beta-api
+                  envVarKey: MONGODB_URI
+
+              - key: REDIS_URL
+                fromService:
+                  type: keyvalue
+                  name: eventalpha-beta-kv
+                  property: connectionString
+
+          # ========================================================
+          # AGGREGATION WORKER
+          # ========================================================
+
+          - type: worker
+            name: eventalpha-beta-aggregation
+            runtime: docker
+            plan: 0.5c-512mb
+            region: singapore
+
+            rootDir: aggregation-worker
+            dockerfilePath: ./Dockerfile
+            dockerContext: .
+
+            autoDeployTrigger: off
+
+            envVars:
+              - key: MONGODB_URI
+                fromService:
+                  type: web
+                  name: eventalpha-beta-api
+                  envVarKey: MONGODB_URI
+
+              - key: CANDLE_AGGREGATION_INTERVALS
+                value: 3,5,15,30,60
+
+              - key: CANDLE_AGGREGATION_LOOKBACK_MINUTES
+                value: "480"
+
+              - key: CANDLE_AGGREGATION_INCREMENTAL_LOOKBACK_MINUTES
+                value: "65"
+
+              - key: CANDLE_AGGREGATION_WRITE_BATCH_SIZE
+                value: "500"
+
+              - key: CANDLE_AGGREGATION_POLL_SECONDS
+                value: "30"
+
+          # ========================================================
+          # TECHNICAL WORKER
+          # ========================================================
+
+          - type: worker
+            name: eventalpha-beta-technical
+            runtime: docker
+            plan: 0.5c-512mb
+            region: singapore
+
+            rootDir: technical-worker
+            dockerfilePath: ./Dockerfile
+            dockerContext: .
+
+            autoDeployTrigger: off
+
+            envVars:
+              - key: MONGODB_URI
+                fromService:
+                  type: web
+                  name: eventalpha-beta-api
+                  envVarKey: MONGODB_URI
+
+              - key: REDIS_URL
+                fromService:
+                  type: keyvalue
+                  name: eventalpha-beta-kv
+                  property: connectionString
+
+              - key: TECHNICAL_INTERVALS
+                value: 3m,5m,15m,30m,60m
+
+              - key: RSI_PERIOD
+                value: "14"
+
+              - key: EMA_FAST_PERIOD
+                value: "12"
+
+              - key: EMA_SLOW_PERIOD
+                value: "26"
+
+              - key: MACD_SIGNAL_PERIOD
+                value: "9"
+
+              - key: ATR_PERIOD
+                value: "14"
+
+              - key: BOLLINGER_PERIOD
+                value: "20"
+
+              - key: BOLLINGER_STDDEV
+                value: "2"
+
+              - key: MOMENTUM_PERIOD
+                value: "10"
+
+              - key: TECHNICAL_HISTORY_LIMIT
+                value: "120"
+
+              - key: TECHNICAL_POLL_SECONDS
+                value: "60"
+
+          # ========================================================
+          # INTRADAY SIGNAL SCANNER
+          # ========================================================
+
+          - type: worker
+            name: eventalpha-beta-signal-scanner
+            runtime: docker
+            plan: 0.5c-512mb
+            region: singapore
+
+            dockerfilePath: ./Dockerfile
+            dockerContext: .
+
+            dockerCommand: node src/workers/intradaySignalScanner.worker.js
+
+            autoDeployTrigger: off
+
+            envVars:
+              - key: NODE_ENV
+                value: production
+
+              - key: MONGODB_URI
+                fromService:
+                  type: web
+                  name: eventalpha-beta-api
+                  envVarKey: MONGODB_URI
+
+              - key: REDIS_URL
+                fromService:
+                  type: keyvalue
+                  name: eventalpha-beta-kv
+                  property: connectionString
+
+              - key: INTRADAY_SIGNAL_SCANNER_BATCH_SIZE
+                value: "20"
+
+              - key: INTRADAY_SIGNAL_SCANNER_CONCURRENCY
+                value: "2"
+
+              - key: INTRADAY_SIGNAL_SCANNER_POLL_SECONDS
+                value: "300"
+
+              - fromGroup: eventalpha-signal-config
+
+          # ========================================================
+          # ALERT MONITOR
+          # ========================================================
+
+          - type: worker
+            name: eventalpha-beta-alert-monitor
+            runtime: docker
+            plan: 0.5c-512mb
+            region: singapore
+
+            dockerfilePath: ./Dockerfile
+            dockerContext: .
+
+            dockerCommand: node src/workers/alertMonitor.worker.js
+
+            autoDeployTrigger: off
+
+            envVars:
+              - key: NODE_ENV
+                value: production
+
+              - key: MONGODB_URI
+                fromService:
+                  type: web
+                  name: eventalpha-beta-api
+                  envVarKey: MONGODB_URI
+
+              - key: REDIS_URL
+                fromService:
+                  type: keyvalue
+                  name: eventalpha-beta-kv
+                  property: connectionString
+
+              - key: ALERT_MAX_PRICE_AGE_SECONDS
+                value: "300"
+
+              - key: ALERT_TARGET_TOLERANCE_PERCENT
+                value: "1"
+
+              - key: ALERT_COOLDOWN_SECONDS
+                value: "900"
+
+              - key: ALERT_MONITOR_POLL_SECONDS
+                value: "15"

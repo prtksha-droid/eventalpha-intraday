@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { apiUrl } from "../config/api";
 
 function Login({ onLogin }) {
   const [email, setEmail] = useState("");
@@ -13,16 +14,19 @@ function Login({ onLogin }) {
       setLoading(true);
       setError("");
 
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          email,
-          password
-        })
-      });
+      const response = await fetch(
+          apiUrl("/api/auth/login"),
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              email,
+              password
+            })
+          }
+        );
 
       const data = await response.json();
 

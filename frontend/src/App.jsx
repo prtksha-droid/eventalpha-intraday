@@ -8,6 +8,7 @@ import {
 import StockOpportunityCard from "./components/StockOpportunityCard";
 import Login from "./components/Login";
 import "./App.css";
+import { apiUrl } from "./config/api";
 
 
 async function readJsonResponse(
@@ -220,7 +221,7 @@ function App() {
 
       try {
         const response = await fetch(
-          "/api/auth/me",
+            apiUrl("/api/auth/me"),
           {
             headers: {
               Authorization:
@@ -267,7 +268,7 @@ function App() {
 
       try {
         const response = await fetch(
-          "/api/notifications",
+            apiUrl("/api/notifications"),
           {
             headers: {
               Authorization:
@@ -347,7 +348,9 @@ function App() {
 
             const response =
               await fetch(
-                `/api/companies/intraday-universe?${params.toString()}`
+                apiUrl(
+                  `/api/companies/intraday-universe?${params.toString()}`
+                )
               );
 
             const data =
@@ -428,7 +431,7 @@ function App() {
 
       try {
         const response = await fetch(
-          "/api/user-companies",
+            apiUrl("/api/user-companies"),
           {
             headers: {
               Authorization:
@@ -474,7 +477,7 @@ function App() {
         setError("");
 
         const response = await fetch(
-          "/api/news/events"
+          apiUrl("/api/news/events")
         );
 
         const data =
@@ -878,7 +881,7 @@ function App() {
       }
 
       const response = await fetch(
-        "/api/user-companies",
+        apiUrl("/api/user-companies"),
         {
           method: "PUT",
 
@@ -949,7 +952,9 @@ function App() {
   ) {
     try {
       const response = await fetch(
-        `/api/notifications/${notificationId}/read`,
+          apiUrl(
+            `/api/notifications/${notificationId}/read`
+          ),
         {
           method: "PATCH",
 
