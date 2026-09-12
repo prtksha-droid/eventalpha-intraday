@@ -76,3 +76,5 @@ current-api-deployment.yaml
 # Local backup files
 *.bak
 *.pre-*
+# Local database migration archives
+backups/
