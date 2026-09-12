@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: candle-worker
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: candle-worker
+
+  template:
+    metadata:
+      labels:
+        app: candle-worker
+
+    spec:
+      containers:
+        - name: candle-worker
+          image: eventalpha-candle-worker:latest
+          imagePullPolicy: Never
+
+          env:
+            - name: REDIS_URL
+              value: "redis://redis:6379"
+
+            - name: TICK_STREAM_NAME
+              value: "market:ticks"
+
+            - name: CANDLE_CONSUMER_GROUP
+              value: "candle-workers"
+
+            - name: CANDLE_CONSUMER_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+                  
+            - name: MONGODB_URI
+              value: "mongodb://mongodb:27017/eventalpha_intraday"

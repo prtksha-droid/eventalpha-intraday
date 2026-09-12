@@ -1,0 +1,139 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: intraday-signal-scanner-worker
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: intraday-signal-scanner-worker
+
+  template:
+    metadata:
+      labels:
+        app: intraday-signal-scanner-worker
+
+    spec:
+      containers:
+        - name: intraday-signal-scanner-worker
+          image: localhost:5000/eventalpha-intraday-api:latest
+          imagePullPolicy: Never
+
+          command:
+            - node
+            - src/workers/intradaySignalScanner.worker.js
+
+          env:
+            - name: MONGODB_URI
+              value: "mongodb://mongodb:27017/eventalpha_intraday"
+
+            - name: REDIS_URL
+              value: "redis://redis:6379"
+              
+            - name: TECHNICAL_INTERVALS
+              value: "3m,5m,15m,30m,60m"
+
+            - name: SIGNAL_MIN_READY_INTERVALS
+              value: "2"
+
+            - name: SIGNAL_BUY_THRESHOLD
+              value: "65"
+
+            - name: SIGNAL_WATCH_THRESHOLD
+              value: "45"
+
+            - name: SIGNAL_RSI_OVERSOLD
+              value: "30"
+
+            - name: SIGNAL_RSI_OVERBOUGHT
+              value: "70"
+
+            - name: SIGNAL_WEIGHT_TREND
+              value: "30"
+
+            - name: SIGNAL_WEIGHT_MACD
+              value: "25"
+
+            - name: SIGNAL_WEIGHT_MOMENTUM
+              value: "20"
+
+            - name: SIGNAL_WEIGHT_RSI
+              value: "15"
+
+            - name: SIGNAL_WEIGHT_BOLLINGER
+              value: "10"
+
+            - name: MARKET_MEMORY_INTERVAL
+              value: "5m"
+
+            - name: MARKET_MEMORY_PATTERN_CANDLES
+              value: "6"
+
+            - name: MARKET_MEMORY_FORWARD_CANDLES
+              value: "3"
+
+            - name: MARKET_MEMORY_HISTORY_LIMIT
+              value: "3000"
+
+            - name: MARKET_MEMORY_MAX_GAP_SECONDS
+              value: "300"
+
+            - name: MARKET_MEMORY_MIN_MATCHES
+              value: "10"
+
+            - name: MARKET_MEMORY_SIMILARITY_THRESHOLD
+              value: "0.85"
+
+            - name: SIGNAL_CONFIDENCE_TECHNICAL_READINESS_WEIGHT
+              value: "30"
+
+            - name: SIGNAL_CONFIDENCE_TECHNICAL_AGREEMENT_WEIGHT
+              value: "30"
+
+            - name: SIGNAL_CONFIDENCE_MEMORY_READINESS_WEIGHT
+              value: "15"
+
+            - name: SIGNAL_CONFIDENCE_MEMORY_ALIGNMENT_WEIGHT
+              value: "25"
+
+            - name: SIGNAL_MAX_TECHNICAL_AGE_SECONDS
+              value: "300"
+
+            - name: RISK_ATR_LOW_THRESHOLD
+              value: "0.159084725932077"
+
+            - name: RISK_ATR_HIGH_THRESHOLD
+              value: "0.309180709277771"
+
+            - name: RISK_MOMENTUM_LOW_THRESHOLD
+              value: "0.137646249139703"
+
+            - name: RISK_MOMENTUM_HIGH_THRESHOLD
+              value: "0.73864011079602"
+
+            - name: RISK_WEIGHT_VOLATILITY
+              value: "0.4"
+
+            - name: RISK_WEIGHT_MOMENTUM
+              value: "0.35"
+
+            - name: RISK_WEIGHT_TECHNICAL_DISAGREEMENT
+              value: "0.25"
+
+            - name: RISK_MEDIUM_THRESHOLD
+              value: "0.4"
+
+            - name: RISK_HIGH_THRESHOLD
+              value: "0.7"
+
+            - name: INTRADAY_SIGNAL_SCANNER_BATCH_SIZE
+              value: "20"
+
+            - name: INTRADAY_SIGNAL_SCANNER_CONCURRENCY
+              value: "2"
+
+            - name: INTRADAY_SIGNAL_SCANNER_POLL_SECONDS
+              value: "300"

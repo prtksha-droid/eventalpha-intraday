@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: alert-monitor-worker
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: alert-monitor-worker
+
+  template:
+    metadata:
+      labels:
+        app: alert-monitor-worker
+
+    spec:
+      containers:
+        - name: alert-monitor-worker
+          image: eventalpha-intraday-api:latest
+          imagePullPolicy: Never
+
+          command:
+            - node
+            - src/workers/alertMonitor.worker.js
+
+          env:
+            - name: MONGODB_URI
+              value: "mongodb://mongodb:27017/eventalpha_intraday"
+
+            - name: REDIS_URL
+              value: "redis://redis:6379"
+
+            - name: ALERT_MAX_PRICE_AGE_SECONDS
+              value: "300"
+
+            - name: ALERT_TARGET_TOLERANCE_PERCENT
+              value: "1"
+
+            - name: ALERT_COOLDOWN_SECONDS
+              value: "900"
+
+            - name: ALERT_MONITOR_POLL_SECONDS
+              value: "15"

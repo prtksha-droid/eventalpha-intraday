@@ -1,0 +1,232 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: market-feed-worker-0
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: market-feed-worker
+      shard: "0"
+
+  template:
+    metadata:
+      labels:
+        app: market-feed-worker
+        shard: "0"
+
+    spec:
+      containers:
+        - name: market-feed-worker
+          image: eventalpha-market-feed:latest
+          imagePullPolicy: Never
+
+          env:
+            - name: FEED_SHARD_ID
+              value: "0"
+
+            - name: FEED_SHARD_COUNT
+              value: "3"
+              
+            - name: FEED_RECONNECT_DELAY_SECONDS
+              value: "10"
+
+            - name: FEED_LTP_STALE_SECONDS
+              value: "30"
+
+            - name: FEED_INITIAL_LTP_TIMEOUT_SECONDS
+              value: "60"
+              
+            - name: GROWW_NATS_CONNECT_TIMEOUT_SECONDS
+              value: "10"
+              
+            - name: FEED_MODE
+              value: "REST"
+              
+            - name: REST_POLL_SECONDS
+              value: "60"
+              
+            - name: REST_BATCH_SIZE
+              value: "50"
+              
+            - name: REST_BATCH_DELAY_SECONDS
+              value: "1"
+
+            - name: MARKET_TIMEZONE
+              value: "Asia/Kolkata"
+
+            - name: MARKET_OPEN_TIME
+              value: "09:15"
+
+            - name: MARKET_CLOSE_TIME
+              value: "15:30"
+
+            - name: MONGODB_URI
+              value: "mongodb://mongodb:27017/eventalpha_intraday"
+
+            - name: REDIS_URL
+              value: "redis://redis:6379"
+
+            - name: GROWW_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: groww-credentials
+                  key: access-token
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: market-feed-worker-1
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: market-feed-worker
+      shard: "1"
+
+  template:
+    metadata:
+      labels:
+        app: market-feed-worker
+        shard: "1"
+
+    spec:
+      containers:
+        - name: market-feed-worker
+          image: eventalpha-market-feed:latest
+          imagePullPolicy: Never
+
+          env:
+            - name: FEED_SHARD_ID
+              value: "1"
+
+            - name: FEED_SHARD_COUNT
+              value: "3"
+              
+            - name: FEED_RECONNECT_DELAY_SECONDS
+              value: "10"
+
+            - name: FEED_LTP_STALE_SECONDS
+              value: "30"
+
+            - name: FEED_INITIAL_LTP_TIMEOUT_SECONDS
+              value: "60"
+              
+            - name: GROWW_NATS_CONNECT_TIMEOUT_SECONDS
+              value: "10"
+              
+            - name: FEED_MODE
+              value: "REST"
+              
+            - name: REST_POLL_SECONDS
+              value: "60"
+              
+            - name: REST_BATCH_SIZE
+              value: "50"
+              
+            - name: REST_BATCH_DELAY_SECONDS
+              value: "1"
+
+            - name: MARKET_TIMEZONE
+              value: "Asia/Kolkata"
+
+            - name: MARKET_OPEN_TIME
+              value: "09:15"
+
+            - name: MARKET_CLOSE_TIME
+              value: "15:30"
+
+            - name: MONGODB_URI
+              value: "mongodb://mongodb:27017/eventalpha_intraday"
+
+            - name: REDIS_URL
+              value: "redis://redis:6379"
+
+            - name: GROWW_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: groww-credentials
+                  key: access-token
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: market-feed-worker-2
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: market-feed-worker
+      shard: "2"
+
+  template:
+    metadata:
+      labels:
+        app: market-feed-worker
+        shard: "2"
+
+    spec:
+      containers:
+        - name: market-feed-worker
+          image: eventalpha-market-feed:latest
+          imagePullPolicy: Never
+
+          env:
+            - name: FEED_SHARD_ID
+              value: "2"
+
+            - name: FEED_SHARD_COUNT
+              value: "3"
+              
+            - name: FEED_RECONNECT_DELAY_SECONDS
+              value: "10"
+
+            - name: FEED_LTP_STALE_SECONDS
+              value: "30"
+
+            - name: FEED_INITIAL_LTP_TIMEOUT_SECONDS
+              value: "60"
+              
+            - name: GROWW_NATS_CONNECT_TIMEOUT_SECONDS
+              value: "10"
+              
+            - name: FEED_MODE
+              value: "REST"
+              
+            - name: REST_POLL_SECONDS
+              value: "60"
+              
+            - name: REST_BATCH_SIZE
+              value: "50"
+              
+            - name: REST_BATCH_DELAY_SECONDS
+              value: "1"
+
+            - name: MARKET_TIMEZONE
+              value: "Asia/Kolkata"
+
+            - name: MARKET_OPEN_TIME
+              value: "09:15"
+
+            - name: MARKET_CLOSE_TIME
+              value: "15:30"
+
+            - name: MONGODB_URI
+              value: "mongodb://mongodb:27017/eventalpha_intraday"
+
+            - name: REDIS_URL
+              value: "redis://redis:6379"
+
+            - name: GROWW_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: groww-credentials
+                  key: access-token

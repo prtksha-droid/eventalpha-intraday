@@ -1,0 +1,14 @@
+services:
+
+  api:
+    build:
+      context: .
+    container_name: eventalpha-intraday-api
+
+    env_file:
+      - .env
+
+    ports:
+      - "${PORT}:${PORT}"
+
+    restart: unless-stopped

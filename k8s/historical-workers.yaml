@@ -1,0 +1,250 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: historical-worker-0
+
+spec:
+  backoffLimit: 2
+
+  template:
+    metadata:
+      labels:
+        app: historical-worker
+        worker: "0"
+
+    spec:
+      restartPolicy: Never
+
+      containers:
+        - name: historical-worker
+          image: eventalpha-historical-worker:latest
+          imagePullPolicy: Never
+
+          env:
+            - name: GROWW_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: groww-credentials
+                  key: access-token
+
+            - name: MONGODB_URI
+              value: "mongodb://mongodb:27017/eventalpha_intraday"
+
+            - name: HISTORICAL_INTERVAL
+              value: "5m"
+
+            - name: HISTORICAL_LOOKBACK_DAYS
+              value: "60"
+
+            - name: HISTORICAL_REQUEST_WINDOW_DAYS
+              value: "30"
+
+            - name: HISTORICAL_REQUEST_DELAY_SECONDS
+              value: "1"
+
+            - name: HISTORICAL_MAX_RETRIES
+              value: "3"
+
+            - name: HISTORICAL_RETRY_DELAY_SECONDS
+              value: "3"
+
+            - name: HISTORICAL_WRITE_BATCH_SIZE
+              value: "500"
+
+            - name: HISTORICAL_WORKER_ID
+              value: "0"
+
+            - name: HISTORICAL_WORKER_COUNT
+              value: "4"
+
+            - name: HISTORICAL_JOB_ID
+              value: "historical-5m-60d-v1"
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: historical-worker-1
+
+spec:
+  backoffLimit: 2
+
+  template:
+    metadata:
+      labels:
+        app: historical-worker
+        worker: "1"
+
+    spec:
+      restartPolicy: Never
+
+      containers:
+        - name: historical-worker
+          image: eventalpha-historical-worker:latest
+          imagePullPolicy: Never
+
+          env:
+            - name: GROWW_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: groww-credentials
+                  key: access-token
+
+            - name: MONGODB_URI
+              value: "mongodb://mongodb:27017/eventalpha_intraday"
+
+            - name: HISTORICAL_INTERVAL
+              value: "5m"
+
+            - name: HISTORICAL_LOOKBACK_DAYS
+              value: "60"
+
+            - name: HISTORICAL_REQUEST_WINDOW_DAYS
+              value: "30"
+
+            - name: HISTORICAL_REQUEST_DELAY_SECONDS
+              value: "1"
+
+            - name: HISTORICAL_MAX_RETRIES
+              value: "3"
+
+            - name: HISTORICAL_RETRY_DELAY_SECONDS
+              value: "3"
+
+            - name: HISTORICAL_WRITE_BATCH_SIZE
+              value: "500"
+
+            - name: HISTORICAL_WORKER_ID
+              value: "1"
+
+            - name: HISTORICAL_WORKER_COUNT
+              value: "4"
+
+            - name: HISTORICAL_JOB_ID
+              value: "historical-5m-60d-v1"
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: historical-worker-2
+
+spec:
+  backoffLimit: 2
+
+  template:
+    metadata:
+      labels:
+        app: historical-worker
+        worker: "2"
+
+    spec:
+      restartPolicy: Never
+
+      containers:
+        - name: historical-worker
+          image: eventalpha-historical-worker:latest
+          imagePullPolicy: Never
+
+          env:
+            - name: GROWW_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: groww-credentials
+                  key: access-token
+
+            - name: MONGODB_URI
+              value: "mongodb://mongodb:27017/eventalpha_intraday"
+
+            - name: HISTORICAL_INTERVAL
+              value: "5m"
+
+            - name: HISTORICAL_LOOKBACK_DAYS
+              value: "60"
+
+            - name: HISTORICAL_REQUEST_WINDOW_DAYS
+              value: "30"
+
+            - name: HISTORICAL_REQUEST_DELAY_SECONDS
+              value: "1"
+
+            - name: HISTORICAL_MAX_RETRIES
+              value: "3"
+
+            - name: HISTORICAL_RETRY_DELAY_SECONDS
+              value: "3"
+
+            - name: HISTORICAL_WRITE_BATCH_SIZE
+              value: "500"
+
+            - name: HISTORICAL_WORKER_ID
+              value: "2"
+
+            - name: HISTORICAL_WORKER_COUNT
+              value: "4"
+
+            - name: HISTORICAL_JOB_ID
+              value: "historical-5m-60d-v1"
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: historical-worker-3
+
+spec:
+  backoffLimit: 2
+
+  template:
+    metadata:
+      labels:
+        app: historical-worker
+        worker: "3"
+
+    spec:
+      restartPolicy: Never
+
+      containers:
+        - name: historical-worker
+          image: eventalpha-historical-worker:latest
+          imagePullPolicy: Never
+
+          env:
+            - name: GROWW_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: groww-credentials
+                  key: access-token
+
+            - name: MONGODB_URI
+              value: "mongodb://mongodb:27017/eventalpha_intraday"
+
+            - name: HISTORICAL_INTERVAL
+              value: "5m"
+
+            - name: HISTORICAL_LOOKBACK_DAYS
+              value: "60"
+
+            - name: HISTORICAL_REQUEST_WINDOW_DAYS
+              value: "30"
+
+            - name: HISTORICAL_REQUEST_DELAY_SECONDS
+              value: "1"
+
+            - name: HISTORICAL_MAX_RETRIES
+              value: "3"
+
+            - name: HISTORICAL_RETRY_DELAY_SECONDS
+              value: "3"
+
+            - name: HISTORICAL_WRITE_BATCH_SIZE
+              value: "500"
+
+            - name: HISTORICAL_WORKER_ID
+              value: "3"
+
+            - name: HISTORICAL_WORKER_COUNT
+              value: "4"
+
+            - name: HISTORICAL_JOB_ID
+              value: "historical-5m-60d-v1"

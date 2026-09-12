@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: historical-worker-test
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: historical-worker-test
+
+  template:
+    metadata:
+      labels:
+        app: historical-worker-test
+
+    spec:
+      restartPolicy: Always
+
+      containers:
+        - name: historical-worker-test
+          image: eventalpha-historical-worker:latest
+          imagePullPolicy: Never
+
+          env:
+            - name: GROWW_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: groww-credentials
+                  key: access-token

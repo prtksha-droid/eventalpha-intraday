@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: market-feed-worker-test
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: market-feed-worker-test
+
+  template:
+    metadata:
+      labels:
+        app: market-feed-worker-test
+
+    spec:
+      containers:
+        - name: market-feed-worker-test
+          image: eventalpha-market-feed:latest
+          imagePullPolicy: Never
+
+          env:
+            - name: FEED_SHARD_ID
+              value: "0"
+
+            - name: FEED_SHARD_COUNT
+              value: "3"
+
+            - name: MONGODB_URI
+              value: "mongodb://mongodb:27017/eventalpha_intraday"
+
+            - name: REDIS_URL
+              value: "redis://redis:6379"
+              
+            - name: GROWW_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: groww-credentials
+                  key: access-token

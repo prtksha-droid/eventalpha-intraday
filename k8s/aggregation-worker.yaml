@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aggregation-worker
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: aggregation-worker
+
+  template:
+    metadata:
+      labels:
+        app: aggregation-worker
+
+    spec:
+      containers:
+        - name: aggregation-worker
+          image: eventalpha-aggregation-worker:latest
+          imagePullPolicy: Never
+
+          env:
+              - name: MONGODB_URI
+                value: "mongodb://mongodb:27017/eventalpha_intraday"
+
+              - name: CANDLE_AGGREGATION_INTERVALS
+                value: "3,5,15,30,60"
+
+              - name: CANDLE_AGGREGATION_LOOKBACK_MINUTES
+                value: "480"
+
+              - name: CANDLE_AGGREGATION_INCREMENTAL_LOOKBACK_MINUTES
+                value: "65"
+
+              - name: CANDLE_AGGREGATION_WRITE_BATCH_SIZE
+                value: "500"
+
+              - name: CANDLE_AGGREGATION_POLL_SECONDS
+                value: "30"

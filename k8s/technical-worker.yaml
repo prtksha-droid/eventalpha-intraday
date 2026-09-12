@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: technical-worker
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: technical-worker
+
+  template:
+    metadata:
+      labels:
+        app: technical-worker
+
+    spec:
+      containers:
+        - name: technical-worker
+          image: eventalpha-technical-worker:latest
+          imagePullPolicy: Never
+
+          env:
+            - name: MONGODB_URI
+              value: "mongodb://mongodb:27017/eventalpha_intraday"
+
+            - name: REDIS_URL
+              value: "redis://redis:6379"
+
+            - name: TECHNICAL_INTERVALS
+              value: "3m,5m,15m,30m,60m"
+
+            - name: RSI_PERIOD
+              value: "14"
+
+            - name: EMA_FAST_PERIOD
+              value: "12"
+
+            - name: EMA_SLOW_PERIOD
+              value: "26"
+
+            - name: MACD_SIGNAL_PERIOD
+              value: "9"
+
+            - name: ATR_PERIOD
+              value: "14"
+
+            - name: BOLLINGER_PERIOD
+              value: "20"
+
+            - name: BOLLINGER_STDDEV
+              value: "2"
+
+            - name: MOMENTUM_PERIOD
+              value: "10"
+
+            - name: TECHNICAL_HISTORY_LIMIT
+              value: "120"
+
+            - name: TECHNICAL_POLL_SECONDS
+              value: "60"

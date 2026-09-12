@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: historical-aggregation-bootstrap
+
+spec:
+  backoffLimit: 1
+
+  template:
+    metadata:
+      labels:
+        app: historical-aggregation-bootstrap
+
+    spec:
+      restartPolicy: Never
+
+      containers:
+        - name: historical-aggregation-bootstrap
+
+          image: eventalpha-historical-aggregation-worker:latest
+          imagePullPolicy: Never
+
+          env:
+            - name: MONGODB_URI
+              value: "mongodb://mongodb:27017/eventalpha_intraday"
+
+            - name: HISTORICAL_AGGREGATION_SOURCE_INTERVAL
+              value: "5m"
+
+            - name: HISTORICAL_AGGREGATION_TARGET_INTERVALS
+              value: "15,30,60"
+
+            - name: HISTORICAL_AGGREGATION_SOURCE_NAME
+              value: "GROWW_HISTORICAL"
+
+            - name: HISTORICAL_AGGREGATION_OUTPUT_SOURCE_NAME
+              value: "AGGREGATED_HISTORICAL"
+
+            - name: HISTORICAL_AGGREGATION_WRITE_BATCH_SIZE
+              value: "500"
+
+            - name: HISTORICAL_AGGREGATION_SESSION_START_HOUR
+              value: "9"
+
+            - name: HISTORICAL_AGGREGATION_SESSION_START_MINUTE
+              value: "15"

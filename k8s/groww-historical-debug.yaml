@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: groww-historical-debug
+spec:
+  restartPolicy: Never
+  containers:
+    - name: debug
+      image: eventalpha-historical-worker:latest
+      imagePullPolicy: Never
+      command: ["sleep", "3600"]
+      env:
+        - name: GROWW_ACCESS_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: groww-credentials
+              key: access-token

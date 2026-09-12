@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: historical-worker-small-test
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: historical-worker-small-test
+
+  template:
+    metadata:
+      labels:
+        app: historical-worker-small-test
+
+    spec:
+      containers:
+        - name: historical-worker-small-test
+          image: eventalpha-historical-worker:latest
+          imagePullPolicy: Never
+
+          env:
+            - name: GROWW_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: groww-credentials
+                  key: access-token
+
+            - name: MONGODB_URI
+              value: "mongodb://mongodb:27017/eventalpha_intraday"
+
+            - name: HISTORICAL_INTERVAL
+              value: "5m"
+
+            - name: HISTORICAL_LOOKBACK_DAYS
+              value: "5"
+
+            - name: HISTORICAL_REQUEST_WINDOW_DAYS
+              value: "5"
+
+            - name: HISTORICAL_REQUEST_DELAY_SECONDS
+              value: "0.5"
+
+            - name: HISTORICAL_MAX_RETRIES
+              value: "3"
+
+            - name: HISTORICAL_RETRY_DELAY_SECONDS
+              value: "2"
+
+            - name: HISTORICAL_WRITE_BATCH_SIZE
+              value: "500"
+
+            - name: HISTORICAL_WORKER_ID
+              value: "0"
+
+            - name: HISTORICAL_WORKER_COUNT
+              value: "1000"
+              
+            - name: HISTORICAL_JOB_ID
+              value: "historical-5m-small-test-01"
