@@ -1,8 +1,15 @@
 import "dotenv/config";
 
 import app from "./app.js";
-import { connectMongo } from "./config/mongo.js";
-import { connectRedis } from "./config/redis.js";
+import {
+  connectMongo
+} from "./config/mongo.js";
+import {
+  connectRedis
+} from "./config/redis.js";
+import {
+  publishGrowwAccessToken
+} from "./services/growwTokenStore.service.js";
 
 const PORT = process.env.PORT;
 
@@ -13,13 +20,22 @@ if (!PORT) {
 async function startServer() {
   try {
     await connectMongo();
+
     await connectRedis();
 
+    await publishGrowwAccessToken();
+
     app.listen(PORT, () => {
-      console.log(`EventAlpha Intraday running on port ${PORT}`);
+      console.log(
+        `EventAlpha Intraday running on port ${PORT}`
+      );
     });
   } catch (error) {
-    console.error("Failed to start EventAlpha:", error);
+    console.error(
+      "Failed to start EventAlpha:",
+      error
+    );
+
     process.exit(1);
   }
 }

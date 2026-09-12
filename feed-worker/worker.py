@@ -26,7 +26,11 @@ SHARD_COUNT = int(get_required_env("FEED_SHARD_COUNT"))
 
 MONGODB_URI = get_required_env("MONGODB_URI")
 REDIS_URL = get_required_env("REDIS_URL")
-GROWW_ACCESS_TOKEN = get_required_env("GROWW_ACCESS_TOKEN")
+GROWW_ACCESS_TOKEN_REDIS_KEY = (
+    get_required_env(
+        "GROWW_ACCESS_TOKEN_REDIS_KEY"
+    )
+)
 
 TICK_STREAM_NAME = get_required_env(
     "TICK_STREAM_NAME"
@@ -165,6 +169,57 @@ redis_client = redis.from_url(
     REDIS_URL,
     decode_responses=True
 )
+
+groww_client_lock = threading.Lock()
+
+groww = None
+groww_access_token = None
+
+
+def get_groww_access_token():
+    token = redis_client.get(
+        GROWW_ACCESS_TOKEN_REDIS_KEY
+    )
+
+    if not token:
+        raise RuntimeError(
+            "Groww access token is not "
+            f"available in Redis key "
+            f"{GROWW_ACCESS_TOKEN_REDIS_KEY}"
+        )
+
+    token = token.strip()
+
+    if not token:
+        raise RuntimeError(
+            "Groww access token in Redis "
+            "is empty"
+        )
+
+    return token
+
+
+def get_groww_client():
+    global groww
+    global groww_access_token
+
+    token = get_groww_access_token()
+
+    with groww_client_lock:
+        if (
+            groww is None
+            or token != groww_access_token
+        ):
+            groww = GrowwAPI(token)
+            groww_access_token = token
+
+            print(
+                "Groww client initialized/"
+                "refreshed from Redis"
+            )
+
+        return groww
+
 redis_client.set(
     f"health:market-feed-worker:{SHARD_ID}:status",
     "WAITING_FOR_LTP"
@@ -173,11 +228,6 @@ redis_client.set(
 redis_client.delete(
     f"health:market-feed-worker:{SHARD_ID}:last-fresh-ltp"
 )
-
-# Groww
-groww = GrowwAPI(GROWW_ACCESS_TOKEN)
-
-print("Groww client created")
 
 
 def load_intraday_instruments():
@@ -303,6 +353,10 @@ def run_rest_feed():
         stored = 0
 
         try:
+            current_groww = (
+                get_groww_client()
+            )
+
             instruments = list(
                 instrument_by_symbol.keys()
             )
@@ -316,7 +370,7 @@ def run_rest_feed():
                     start:start + REST_BATCH_SIZE
                 ]
 
-                ltp_data = groww.get_ltp(
+                ltp_data = current_groww.get_ltp(
                     segment="CASH",
                     exchange_trading_symbols=batch
                 )
@@ -468,7 +522,11 @@ instrument_lookup = {
 }
 
 def connect_feed():
-    new_feed = GrowwFeed(groww)
+    current_groww = get_groww_client()
+
+    new_feed = GrowwFeed(
+        current_groww
+    )
 
     print(
         f"Subscribing to "
