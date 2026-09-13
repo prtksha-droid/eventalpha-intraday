@@ -130,6 +130,9 @@ def is_market_session_active():
     market_tz = ZoneInfo(MARKET_TIMEZONE)
     now = datetime.now(market_tz)
 
+    if now.weekday() >= 5:
+        return False
+
     open_hour, open_minute = map(
         int,
         MARKET_OPEN_TIME.split(":")
@@ -352,6 +355,19 @@ def run_rest_feed():
         cycle_started_at = time.time()
         stored = 0
 
+        if not is_market_session_active():
+            redis_client.set(
+                f"health:market-feed-worker:"
+                f"{SHARD_ID}:status",
+                "MARKET_CLOSED"
+            )
+
+            time.sleep(
+                REST_POLL_SECONDS
+            )
+
+            continue
+
         try:
             current_groww = (
                 get_groww_client()
@@ -449,7 +465,7 @@ def run_rest_feed():
                 if batch_stored:
                     pipeline.execute()
                     stored += batch_stored
-                    
+
                 time.sleep(
                     REST_BATCH_DELAY_SECONDS
                 )
@@ -767,14 +783,14 @@ while True:
                 f"health:market-feed-worker:{SHARD_ID}:last-fresh-ltp",
                 str(last_fresh_ltp_at)
             )
-            
-            
+
+
 
             print(
                 f"Worker {SHARD_ID} stored "
                 f"{stored} live LTP values in Redis"
             )
-        
+
         if (
             is_market_session_active()
             and last_fresh_ltp_at is None
@@ -792,7 +808,7 @@ while True:
             )
 
             sys.exit(1)
-        
+
         if last_fresh_ltp_at is not None:
             ltp_age_seconds = (
                 time.time() - last_fresh_ltp_at
