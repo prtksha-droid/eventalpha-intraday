@@ -191,6 +191,9 @@ projects:
               - key: AUTH_PUBLIC_REGISTRATION_ENABLED
                 value: "false"
 
+              - key: API_OPERATIONAL_ROUTES_ENABLED
+                value: "false"
+
               - key: PORT
                 value: "10000"
 

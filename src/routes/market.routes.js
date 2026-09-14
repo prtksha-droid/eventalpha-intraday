@@ -1,7 +1,12 @@
 import express from "express";
 
+import {
+  requireAuth
+} from "../middleware/auth.middleware.js";
+
 import { getIntradayMarketListings } from "../services/marketUniverse.service.js";
 import { shardItems } from "../utils/shard.js";
+
 import {
   getTechnicalSnapshot,
   getTechnicalSnapshots
@@ -23,6 +28,7 @@ import {
 } from "../services/marketMemoryEvidence.service.js";
 
 const router = express.Router();
+router.use(requireAuth);
 
 router.get("/feed-plan", async (req, res) => {
   try {

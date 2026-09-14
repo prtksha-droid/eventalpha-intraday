@@ -327,6 +327,10 @@ function App() {
         async ({
           background = false
         } = {}) => {
+          if (!authToken) {
+            return;
+          }
+
           try {
             if (background) {
               setDiscoverRefreshing(true);
@@ -366,7 +370,13 @@ function App() {
               await fetch(
                 apiUrl(
                   `/api/companies/intraday-universe?${params.toString()}`
-                )
+                ),
+                {
+                  headers: {
+                    Authorization:
+                      `Bearer ${authToken}`
+                  }
+                }
               );
 
             const data =
@@ -431,6 +441,7 @@ function App() {
           }
         },
         [
+          authToken,
           discoverPage,
           discoverSearch,
           decisionFilter
@@ -487,38 +498,48 @@ function App() {
 
 
   const loadEvents =
-    useCallback(async () => {
-      try {
-        setLoading(true);
-        setError("");
-
-        const response = await fetch(
-          apiUrl("/api/news/events")
-        );
-
-        const data =
-          await readJsonResponse(
-            response,
-            "Unable to load market events"
-          );
-
-        if (!response.ok || !data.success) {
-          throw new Error(
-            data.error ||
-              `Unable to load market events (${response.status})`
-          );
+      useCallback(async () => {
+        if (!authToken) {
+          return;
         }
 
-        setEvents(data.events || []);
-      } catch (err) {
-        setError(
-          err.message ||
-            "Unable to load market events"
-        );
-      } finally {
-        setLoading(false);
-      }
-    }, []);
+        try {
+          setLoading(true);
+          setError("");
+
+          const response = await fetch(
+            apiUrl("/api/news/events"),
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${authToken}`
+              }
+            }
+          );
+
+          const data =
+            await readJsonResponse(
+              response,
+              "Unable to load market events"
+            );
+
+          if (!response.ok || !data.success) {
+            throw new Error(
+              data.error ||
+                `Unable to load market events (${response.status})`
+            );
+          }
+
+          setEvents(data.events || []);
+        } catch (err) {
+          setError(
+            err.message ||
+              "Unable to load market events"
+          );
+        } finally {
+          setLoading(false);
+        }
+      }, [authToken]);
 
 
   useEffect(() => {

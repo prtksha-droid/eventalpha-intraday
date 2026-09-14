@@ -2,26 +2,44 @@ import express from "express";
 
 import { Instrument } from "../models/Instrument.js";
 import { syncInstrumentMaster } from "../services/instrumentSync.service.js";
+import {
+  requireAuth
+} from "../middleware/auth.middleware.js";
+
+import {
+  requireOperationalRoutesEnabled
+} from "../middleware/operationalRoutes.middleware.js";
 
 const router = express.Router();
 
-router.post("/sync", async (req, res) => {
-  try {
-    const result = await syncInstrumentMaster();
+router.use(requireAuth);
 
-    res.json({
-      success: true,
-      result
-    });
-  } catch (error) {
-    console.error("Instrument sync failed:", error);
+router.post(
+  "/sync",
+  requireOperationalRoutesEnabled,
+  async (req, res) => {
+    try {
+      const result =
+        await syncInstrumentMaster();
 
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+      res.json({
+        success: true,
+        result
+      });
+    } catch (error) {
+      console.error(
+        "Instrument sync failed:",
+        error
+      );
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
   }
-});
+);
+
 
 router.get("/stats", async (req, res) => {
   try {

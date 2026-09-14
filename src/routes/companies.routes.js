@@ -3,30 +3,46 @@ import express from "express";
 import { Company } from "../models/Company.js";
 import { syncCompanyMaster } from "../services/companyMaster.service.js";
 import { buildIntradayUniverse } from "../services/intradayUniverse.service.js";
-import { getEventFeed } from "../services/news/eventFeed.service.js";
+
 import {
   LatestIntradaySignal
 } from "../models/LatestIntradaySignal.js";
+import {
+  requireAuth
+} from "../middleware/auth.middleware.js";
+
+import {
+  requireOperationalRoutesEnabled
+} from "../middleware/operationalRoutes.middleware.js";
 
 const router = express.Router();
+router.use(requireAuth);
 
-router.post("/sync", async (req, res) => {
-  try {
-    const result = await syncCompanyMaster();
+router.post(
+  "/sync",
+  requireOperationalRoutesEnabled,
+  async (req, res) => {
+    try {
+      const result =
+        await syncCompanyMaster();
 
-    res.json({
-      success: true,
-      result
-    });
-  } catch (error) {
-    console.error("Company master sync failed:", error);
+      res.json({
+        success: true,
+        result
+      });
+    } catch (error) {
+      console.error(
+        "Company master sync failed:",
+        error
+      );
 
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
   }
-});
+);
 
 router.get("/stats", async (req, res) => {
   try {
@@ -81,23 +97,32 @@ router.get("/stats", async (req, res) => {
     });
   }
 });
-router.post("/build-intraday-universe", async (req, res) => {
-  try {
-    const result = await buildIntradayUniverse();
+router.post(
+  "/build-intraday-universe",
+  requireOperationalRoutesEnabled,
+  async (req, res) => {
+    try {
+      const result =
+        await buildIntradayUniverse();
 
-    res.json({
-      success: true,
-      result
-    });
-  } catch (error) {
-    console.error("Intraday universe build failed:", error);
+      res.json({
+        success: true,
+        result
+      });
+    } catch (error) {
+      console.error(
+        "Intraday universe build failed:",
+        error
+      );
 
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
   }
-});
+);
+
 router.get("/intraday-universe/stats", async (req, res) => {
   try {
     const [

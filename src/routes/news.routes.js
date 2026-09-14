@@ -6,9 +6,33 @@ import {
   getEventFeedController,
 } from "../controllers/news.controller.js";
 
+import {
+  requireAuth
+} from "../middleware/auth.middleware.js";
+
+import {
+  requireOperationalRoutesEnabled
+} from "../middleware/operationalRoutes.middleware.js";
+
 const router = express.Router();
-router.get("/events", getEventFeedController);
-router.post("/ingest", ingestSingleNews);
-router.post("/ingest/batch", ingestNewsBatchController);
+
+router.use(requireAuth);
+
+router.get(
+  "/events",
+  getEventFeedController
+);
+
+router.post(
+  "/ingest",
+  requireOperationalRoutesEnabled,
+  ingestSingleNews
+);
+
+router.post(
+  "/ingest/batch",
+  requireOperationalRoutesEnabled,
+  ingestNewsBatchController
+);
 
 export default router;
