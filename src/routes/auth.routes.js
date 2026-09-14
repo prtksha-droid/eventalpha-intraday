@@ -14,10 +14,15 @@ import {
   loginRateLimit
 } from "../middleware/loginRateLimit.middleware.js";
 
+import {
+  requirePublicRegistrationEnabled
+} from "../middleware/publicRegistration.middleware.js";
+
 const router = express.Router();
 
 router.post(
   "/register",
+  requirePublicRegistrationEnabled,
   registerController
 );
 
