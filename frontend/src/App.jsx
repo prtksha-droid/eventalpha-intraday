@@ -1569,7 +1569,9 @@ function App() {
                   className={`discover-refresh-dot ${
                     discoverRefreshing
                       ? "is-refreshing"
-                      : ""
+                      : marketSession?.active === false
+                        ? "is-market-closed"
+                        : ""
                   }`}
                 />
 
