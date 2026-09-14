@@ -10,6 +10,10 @@ import {
   requireAuth
 } from "../middleware/auth.middleware.js";
 
+import {
+  loginRateLimit
+} from "../middleware/loginRateLimit.middleware.js";
+
 const router = express.Router();
 
 router.post(
@@ -19,6 +23,7 @@ router.post(
 
 router.post(
   "/login",
+  loginRateLimit,
   loginController
 );
 

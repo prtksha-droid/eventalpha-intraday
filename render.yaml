@@ -182,6 +182,12 @@ projects:
               - key: CORS_ALLOWED_ORIGINS
                 sync: false
 
+              - key: AUTH_LOGIN_RATE_LIMIT_MAX_ATTEMPTS
+                value: "10"
+
+              - key: AUTH_LOGIN_RATE_LIMIT_WINDOW_SECONDS
+                value: "900"
+
               - key: PORT
                 value: "10000"
 
