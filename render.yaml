@@ -194,6 +194,9 @@ projects:
               - key: API_OPERATIONAL_ROUTES_ENABLED
                 value: "false"
 
+              - key: MARKET_TIMEZONE
+                value: Asia/Kolkata
+
               - key: MARKET_OPEN_TIME
                 value: "09:15"
 
