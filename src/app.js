@@ -10,11 +10,18 @@ import newsRoutes from "./routes/news.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import userCompanyRoutes from "./routes/userCompany.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
+import {
+  getCorsOptions
+} from "./config/cors.js";
 
 const app = express();
 
 app.use(helmet());
-app.use(cors());
+app.use(
+  cors(
+    getCorsOptions()
+  )
+);
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/user-companies", userCompanyRoutes);

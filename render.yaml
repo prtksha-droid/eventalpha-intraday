@@ -179,6 +179,9 @@ projects:
               - key: NODE_ENV
                 value: production
 
+              - key: CORS_ALLOWED_ORIGINS
+                sync: false
+
               - key: PORT
                 value: "10000"
 
