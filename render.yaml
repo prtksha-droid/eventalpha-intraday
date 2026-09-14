@@ -674,7 +674,7 @@ projects:
                 value: "20"
 
               - key: INTRADAY_SIGNAL_SCANNER_CONCURRENCY
-                value: "2"
+                value: "8"
 
               - key: INTRADAY_SIGNAL_SCANNER_POLL_SECONDS
                 value: "300"
