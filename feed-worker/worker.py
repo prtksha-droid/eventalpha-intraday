@@ -157,7 +157,7 @@ def is_market_session_active():
         microsecond=0
     )
 
-    return market_open <= now <= market_close
+    return market_open <= now < market_close
 
 # MongoDB
 mongo_client = MongoClient(MONGODB_URI)
