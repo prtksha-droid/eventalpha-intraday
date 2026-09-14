@@ -2,6 +2,42 @@ import {
   getSignalEngineConfig
 } from "../config/signalEngine.js";
 
+function getIntervalSeconds(interval) {
+  if (
+    typeof interval !== "string" ||
+    !interval.trim()
+  ) {
+    return null;
+  }
+
+  const match = interval
+    .trim()
+    .toLowerCase()
+    .match(/^(\d+)([mhd])$/);
+
+  if (!match) {
+    return null;
+  }
+
+  const value = Number(match[1]);
+  const unit = match[2];
+
+  if (
+    !Number.isFinite(value) ||
+    value <= 0
+  ) {
+    return null;
+  }
+
+  const unitSeconds = {
+    m: 60,
+    h: 60 * 60,
+    d: 24 * 60 * 60
+  };
+
+  return value * unitSeconds[unit];
+}
+
 export function evaluateTechnicalEvidence(
   technicalContext
 ) {
@@ -233,18 +269,44 @@ export function evaluateTechnicalEvidence(
     const lastCandleTimestamp =
       snapshot.lastCandleTimestamp;
 
-    const maxAgeSeconds =
+    const freshnessGraceSeconds =
       config.freshness?.maxAgeSeconds;
 
+    const intervalSeconds =
+      getIntervalSeconds(interval);
+
+    const technicalAgeSeconds =
+      typeof lastCandleTimestamp === "number"
+        ? nowEpochSeconds -
+          lastCandleTimestamp
+        : null;
+
+    const allowedAgeSeconds =
+      typeof intervalSeconds === "number" &&
+      typeof freshnessGraceSeconds === "number" &&
+      freshnessGraceSeconds > 0
+        ? intervalSeconds +
+          freshnessGraceSeconds
+        : null;
+
     const isFresh =
-      typeof lastCandleTimestamp === "number" &&
-      typeof maxAgeSeconds === "number" &&
-      maxAgeSeconds > 0 &&
-      nowEpochSeconds - lastCandleTimestamp <=
-        maxAgeSeconds;
+      typeof technicalAgeSeconds === "number" &&
+      typeof allowedAgeSeconds === "number" &&
+      technicalAgeSeconds >= 0 &&
+      technicalAgeSeconds <=
+        allowedAgeSeconds;
         
     evidence[interval] = {
       available: true,
+      freshness: {
+          fresh: isFresh,
+          ageSeconds:
+            technicalAgeSeconds,
+          allowedAgeSeconds,
+          intervalSeconds,
+          graceSeconds:
+            freshnessGraceSeconds
+        },
       ready:
           snapshot.ready === true &&
           isFresh,
