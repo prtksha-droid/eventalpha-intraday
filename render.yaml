@@ -634,6 +634,9 @@ projects:
               - key: TECHNICAL_POLL_SECONDS
                 value: "60"
 
+              - key: TECHNICAL_CONCURRENCY
+                value: "8"
+
           # ========================================================
           # INTRADAY SIGNAL SCANNER
           # ========================================================

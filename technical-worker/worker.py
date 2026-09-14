@@ -2,6 +2,11 @@ import math
 import os
 import time
 
+from concurrent.futures import (
+    ThreadPoolExecutor,
+    as_completed
+)
+
 from pymongo import MongoClient
 import redis
 
@@ -86,6 +91,14 @@ TECHNICAL_POLL_SECONDS = get_int_env(
     "TECHNICAL_POLL_SECONDS"
 )
 
+TECHNICAL_CONCURRENCY = get_int_env(
+    "TECHNICAL_CONCURRENCY"
+)
+
+if TECHNICAL_CONCURRENCY <= 0:
+    raise RuntimeError(
+        "TECHNICAL_CONCURRENCY must be greater than zero"
+    )
 
 mongo_client = MongoClient(
     MONGODB_URI
@@ -636,10 +649,129 @@ def calculate_snapshot(
             ]
     }
 
+def build_technical_payload(
+    security,
+    interval
+):
+    exchange = (
+        security["exchange"]
+    )
+
+    trading_symbol = (
+        security[
+            "tradingSymbol"
+        ]
+    )
+
+    candles = load_candles(
+        exchange,
+        trading_symbol,
+        interval
+    )
+
+    snapshot = calculate_snapshot(
+        candles
+    )
+
+    if not snapshot:
+        return None
+
+    redis_key = (
+        f"technical:"
+        f"{interval}:"
+        f"{exchange}:"
+        f"{trading_symbol}"
+    )
+
+    mapping = {
+        "exchange":
+            exchange,
+
+        "tradingSymbol":
+            trading_symbol,
+
+        "isin":
+            snapshot["isin"],
+
+        "close":
+            snapshot["close"],
+
+        "emaFast":
+            snapshot["emaFast"]
+            if snapshot["emaFast"] is not None
+            else "",
+
+        "emaSlow":
+            snapshot["emaSlow"]
+            if snapshot["emaSlow"] is not None
+            else "",
+
+        "rsi":
+            snapshot["rsi"]
+            if snapshot["rsi"] is not None
+            else "",
+
+        "macd":
+            snapshot["macd"]["macd"]
+            if snapshot["macd"]
+            else "",
+
+        "macdSignal":
+            snapshot["macd"]["signal"]
+            if snapshot["macd"]
+            else "",
+
+        "macdHistogram":
+            snapshot["macd"]["histogram"]
+            if snapshot["macd"]
+            else "",
+
+        "atr":
+            snapshot["atr"]
+            if snapshot["atr"] is not None
+            else "",
+
+        "bollingerMiddle":
+            snapshot["bollinger"]["middle"]
+            if snapshot["bollinger"]
+            else "",
+
+        "bollingerUpper":
+            snapshot["bollinger"]["upper"]
+            if snapshot["bollinger"]
+            else "",
+
+        "bollingerLower":
+            snapshot["bollinger"]["lower"]
+            if snapshot["bollinger"]
+            else "",
+
+        "momentumAbsolute":
+            snapshot["momentum"]["absolute"]
+            if snapshot["momentum"]
+            else "",
+
+        "momentumPercentage":
+            snapshot["momentum"]["percentage"]
+            if snapshot["momentum"]
+            else "",
+
+        "lastCandleTimestamp":
+            snapshot[
+                "lastCandleTimestamp"
+            ]
+    }
+
+    return (
+        redis_key,
+        mapping
+    )
 
 def process_interval(
     interval
 ):
+    started_at = time.time()
+
     securities = (
         get_securities_for_interval(
             interval
@@ -647,199 +779,71 @@ def process_interval(
     )
 
     stored = 0
+    failed = 0
 
     pipeline = (
         redis_client.pipeline()
     )
 
-    for security in securities:
+    with ThreadPoolExecutor(
+        max_workers=TECHNICAL_CONCURRENCY
+    ) as executor:
 
-        exchange = (
-            security["exchange"]
-        )
-
-        trading_symbol = (
-            security[
-                "tradingSymbol"
-            ]
-        )
-
-        candles = load_candles(
-            exchange,
-            trading_symbol,
-            interval
-        )
-
-        snapshot = (
-            calculate_snapshot(
-                candles
+        futures = [
+            executor.submit(
+                build_technical_payload,
+                security,
+                interval
             )
-        )
+            for security in securities
+        ]
 
-        if not snapshot:
-            continue
+        for future in as_completed(
+            futures
+        ):
+            try:
+                result = (
+                    future.result()
+                )
+            except Exception as error:
+                failed += 1
 
-        redis_key = (
-            f"technical:"
-            f"{interval}:"
-            f"{exchange}:"
-            f"{trading_symbol}"
-        )
+                print(
+                    f"{interval} technical "
+                    f"security processing error:",
+                    repr(error)
+                )
 
-        pipeline.hset(
-            redis_key,
-            mapping={
-                "exchange":
-                    exchange,
+                continue
 
-                "tradingSymbol":
-                    trading_symbol,
+            if not result:
+                continue
 
-                "isin":
-                    snapshot[
-                        "isin"
-                    ],
+            redis_key, mapping = (
+                result
+            )
 
-                "close":
-                    snapshot[
-                        "close"
-                    ],
+            pipeline.hset(
+                redis_key,
+                mapping=mapping
+            )
 
-                "emaFast":
-                    snapshot[
-                        "emaFast"
-                    ]
-                    if snapshot[
-                        "emaFast"
-                    ] is not None
-                    else "",
-
-                "emaSlow":
-                    snapshot[
-                        "emaSlow"
-                    ]
-                    if snapshot[
-                        "emaSlow"
-                    ] is not None
-                    else "",
-
-                "rsi":
-                    snapshot[
-                        "rsi"
-                    ]
-                    if snapshot[
-                        "rsi"
-                    ] is not None
-                    else "",
-
-                "macd":
-                    snapshot[
-                        "macd"
-                    ][
-                        "macd"
-                    ]
-                    if snapshot[
-                        "macd"
-                    ]
-                    else "",
-
-                "macdSignal":
-                    snapshot[
-                        "macd"
-                    ][
-                        "signal"
-                    ]
-                    if snapshot[
-                        "macd"
-                    ]
-                    else "",
-
-                "macdHistogram":
-                    snapshot[
-                        "macd"
-                    ][
-                        "histogram"
-                    ]
-                    if snapshot[
-                        "macd"
-                    ]
-                    else "",
-
-                "atr":
-                    snapshot[
-                        "atr"
-                    ]
-                    if snapshot[
-                        "atr"
-                    ] is not None
-                    else "",
-
-                "bollingerMiddle":
-                    snapshot[
-                        "bollinger"
-                    ][
-                        "middle"
-                    ]
-                    if snapshot[
-                        "bollinger"
-                    ]
-                    else "",
-
-                "bollingerUpper":
-                    snapshot[
-                        "bollinger"
-                    ][
-                        "upper"
-                    ]
-                    if snapshot[
-                        "bollinger"
-                    ]
-                    else "",
-
-                "bollingerLower":
-                    snapshot[
-                        "bollinger"
-                    ][
-                        "lower"
-                    ]
-                    if snapshot[
-                        "bollinger"
-                    ]
-                    else "",
-
-                "momentumAbsolute":
-                    snapshot[
-                        "momentum"
-                    ][
-                        "absolute"
-                    ]
-                    if snapshot[
-                        "momentum"
-                    ]
-                    else "",
-
-                "momentumPercentage":
-                    snapshot[
-                        "momentum"
-                    ][
-                        "percentage"
-                    ]
-                    if snapshot[
-                        "momentum"
-                    ]
-                    else "",
-
-                "lastCandleTimestamp":
-                    snapshot[
-                        "lastCandleTimestamp"
-                    ]
-            }
-        )
-
-        stored += 1
+            stored += 1
 
     if stored:
         pipeline.execute()
+
+    elapsed_seconds = (
+        time.time() -
+        started_at
+    )
+
+    print(
+        f"{interval}: processed "
+        f"{len(securities)} securities "
+        f"in {elapsed_seconds:.1f}s "
+        f"with {failed} failures"
+    )
 
     return stored
 
@@ -853,6 +857,11 @@ def run_worker():
     print(
         "Intervals:",
         TECHNICAL_INTERVALS
+    )
+
+    print(
+        "Concurrency:",
+        TECHNICAL_CONCURRENCY
     )
 
     while True:
