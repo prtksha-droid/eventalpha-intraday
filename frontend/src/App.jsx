@@ -168,6 +168,16 @@ function App() {
       setDiscoverRefreshError
     ] = useState("");
 
+    const [
+      marketSession,
+      setMarketSession
+    ] = useState(null);
+
+    const [
+      marketSessionError,
+      setMarketSessionError
+    ] = useState("");
+
     const discoverLastUpdatedText =
       discoverLastUpdated
         ? discoverLastUpdated.toLocaleTimeString(
@@ -535,12 +545,114 @@ function App() {
           setError(
             err.message ||
               "Unable to load market events"
-          );
-        } finally {
+           );
+          } finally {
           setLoading(false);
         }
       }, [authToken]);
 
+  const loadMarketSession =
+    useCallback(async () => {
+        if (!authToken) {
+          setMarketSession(null);
+          setMarketSessionError("");
+          return;
+        }
+
+        try {
+          const response =
+            await fetch(
+              apiUrl(
+                "/api/market/session"
+              ),
+              {
+                headers: {
+                  Authorization:
+                    `Bearer ${authToken}`
+                }
+              }
+            );
+
+          const data =
+            await readJsonResponse(
+              response,
+              "Unable to load market session"
+            );
+
+          if (
+            !response.ok ||
+            !data.success ||
+            !data.session
+          ) {
+            throw new Error(
+              data.error ||
+                `Unable to load market session (${response.status})`
+            );
+          }
+
+          setMarketSession(
+            data.session
+          );
+
+          setMarketSessionError("");
+        } catch (error) {
+          console.error(
+            "Failed to load market session:",
+            error
+          );
+
+          setMarketSession(null);
+
+          setMarketSessionError(
+            error.message ||
+              "Unable to determine market session"
+          );
+        }
+      }, [authToken]);
+
+  useEffect(() => {
+      if (!authToken) {
+        return undefined;
+      }
+
+      loadMarketSession();
+
+      const configuredInterval =
+        Number(
+          import.meta.env
+            .VITE_DISCOVER_REFRESH_MS
+        );
+
+      if (
+        !Number.isFinite(
+          configuredInterval
+        ) ||
+        configuredInterval <= 0
+      ) {
+        console.warn(
+          "VITE_DISCOVER_REFRESH_MS is not configured correctly. Market-session refresh is disabled."
+        );
+
+        return undefined;
+      }
+
+      const intervalId =
+        window.setInterval(
+          () => {
+            loadMarketSession();
+          },
+          configuredInterval
+        );
+
+      return () => {
+        window.clearInterval(
+          intervalId
+        );
+      };
+    }, [
+      authToken,
+      loadMarketSession
+    ]);
 
   useEffect(() => {
     loadCurrentUser();
@@ -1463,8 +1575,14 @@ function App() {
 
                 <span>
                   {discoverRefreshing
-                    ? "Refreshing market data..."
-                    : "Auto refresh active"}
+                    ? "Refreshing latest available data..."
+                    : marketSession?.active === true
+                      ? "Market open · auto refresh active"
+                      : marketSession?.active === false
+                        ? "Market closed · showing latest preserved signals"
+                        : marketSessionError
+                          ? "Market session status unavailable"
+                          : "Checking market session..."}
                 </span>
               </div>
 
@@ -2499,13 +2617,29 @@ function App() {
               </strong>
             </div>
 
-            <div className="workspace-status">
+            <div
+              className={`workspace-status ${
+                marketSession?.active === true
+                  ? "market-open"
+                  : marketSession?.active === false
+                    ? "market-closed"
+                    : "market-unknown"
+              }`}
+            >
               <span className="status-dot" />
 
               <span>
-                Market Intelligence
+                {marketSession?.active === true
+                  ? "Market Open"
+                  : marketSession?.active === false
+                    ? "Market Closed"
+                    : "Market Status"}
               </span>
             </div>
+
+            <span className="beta-badge">
+              BETA
+            </span>
 
             <button
               type="button"
@@ -2530,8 +2664,26 @@ function App() {
           </header>
 
           <main className="workspace-content">
-            {renderActiveView()}
-          </main>
+              <div
+                className="beta-disclaimer"
+                role="note"
+              >
+                <strong>
+                  Beta market intelligence.
+                </strong>
+
+                <span>
+                  Signals and trade plans are
+                  informational and may be delayed
+                  or incomplete. They are not
+                  investment advice. Verify market
+                  data and assess risk before making
+                  any trading decision.
+                </span>
+              </div>
+
+              {renderActiveView()}
+            </main>
         </div>
       </div>
 

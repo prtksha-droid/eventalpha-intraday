@@ -26,9 +26,61 @@ import {
 import {
   evaluateMarketMemoryEvidence
 } from "../services/marketMemoryEvidence.service.js";
+import {
+  getMarketSessionConfig,
+  isMarketSessionActive
+} from "../config/marketSession.js";
 
 const router = express.Router();
 router.use(requireAuth);
+
+router.get(
+  "/session",
+  (req, res) => {
+    try {
+      const now = new Date();
+
+      const config =
+        getMarketSessionConfig();
+
+      return res.json({
+        success: true,
+
+        session: {
+          active:
+            isMarketSessionActive(
+              now
+            ),
+
+          timezone:
+            config.timezone,
+
+          openTime:
+            config.openTime,
+
+          closeTime:
+            config.closeTime,
+
+          checkedAt:
+            now.toISOString()
+        }
+      });
+    } catch (error) {
+      console.error(
+        "Unable to determine market session:",
+        error
+      );
+
+      return res
+        .status(500)
+        .json({
+          success: false,
+          error:
+            "Unable to determine market session status"
+        });
+    }
+  }
+);
 
 router.get("/feed-plan", async (req, res) => {
   try {

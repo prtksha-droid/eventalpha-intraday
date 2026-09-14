@@ -293,6 +293,57 @@ button:disabled {
   box-shadow: 0 0 12px rgba(56, 216, 151, 0.55);
 }
 
+.workspace-status.market-closed .status-dot {
+  background: #f0b45d;
+  box-shadow:
+    0 0 12px
+    rgba(240, 180, 93, 0.4);
+}
+
+.workspace-status.market-unknown .status-dot {
+  background: #748094;
+  box-shadow: none;
+}
+
+.beta-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+  padding: 0 9px;
+  border: 1px solid
+    rgba(120, 143, 255, 0.28);
+  border-radius: 999px;
+  background:
+    rgba(120, 143, 255, 0.08);
+  color: #aebcff;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+}
+
+.beta-disclaimer {
+  margin-bottom: 22px;
+  padding: 11px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  border: 1px solid
+    rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  background:
+    rgba(255, 255, 255, 0.025);
+  color: #7f8a9c;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.beta-disclaimer strong {
+  flex: 0 0 auto;
+  color: #aab4c3;
+  font-weight: 700;
+}
+
 .workspace-content {
   width: min(1160px, calc(100% - 64px));
   margin: 0 auto;
@@ -1888,5 +1939,12 @@ button:disabled {
     align-items: flex-start;
     flex-direction: column;
     gap: 5px;
+  }
+}
+
+@media (max-width: 720px) {
+  .beta-disclaimer {
+    flex-direction: column;
+    gap: 3px;
   }
 }
