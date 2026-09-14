@@ -54,8 +54,16 @@ function nullableNumber(value) {
 
 function App() {
   const [authToken, setAuthToken] = useState(
-    localStorage.getItem("eventalpha_token")
+    sessionStorage.getItem(
+      "eventalpha_token"
+    )
   );
+
+  useEffect(() => {
+    localStorage.removeItem(
+      "eventalpha_token"
+    );
+  }, []);
 
   const [currentUser, setCurrentUser] =
     useState(null);
@@ -136,7 +144,7 @@ function App() {
     editingSaving,
     setEditingSaving,
   ] = useState(false);
-  
+
   const [discoverCompanies, setDiscoverCompanies] = useState([]);
   const [discoverLoading, setDiscoverLoading] = useState(false);
   const [discoverError, setDiscoverError] = useState("");
@@ -174,20 +182,28 @@ function App() {
 
 
     function handleLogin({ token, user }) {
-        localStorage.setItem(
-          "eventalpha_token",
-          token
-        );
+      localStorage.removeItem(
+        "eventalpha_token"
+      );
 
-    setAuthToken(token);
-    setCurrentUser(user);
-  }
+      sessionStorage.setItem(
+        "eventalpha_token",
+        token
+      );
+
+      setAuthToken(token);
+      setCurrentUser(user);
+    }
 
 
   function handleLogout() {
-    localStorage.removeItem(
-      "eventalpha_token"
-    );
+      localStorage.removeItem(
+        "eventalpha_token"
+      );
+
+      sessionStorage.removeItem(
+        "eventalpha_token"
+      );
 
     setAuthToken(null);
     setCurrentUser(null);
@@ -523,7 +539,7 @@ function App() {
   useEffect(() => {
     loadEvents();
   }, [loadEvents]);
-  
+
   useEffect(() => {
       const configuredInterval =
         Number(
@@ -773,8 +789,8 @@ function App() {
 
       return map;
     }, [events]);
-    
-  
+
+
 
   const buyCount =
     stockOpportunities.filter(
@@ -1470,7 +1486,7 @@ function App() {
                 >
                   Search
                 </button>
-                
+
                 <select
                   value={decisionFilter}
                   onChange={(event) => {
@@ -1562,7 +1578,7 @@ function App() {
                     (company) => {
                       const signal =
                         company.intradaySignal || null;
-                        
+
                       const tradeSignals =
                           Array.isArray(signal?.signals)
                             ? signal.signals.filter(
@@ -1637,7 +1653,7 @@ function App() {
                                   {signal.reason}
                                 </p>
 
-                                
+
                               </>
                             ) : (
                              <p>
@@ -1646,7 +1662,7 @@ function App() {
                             </p>
                             )}
                           </div>
-                          
+
                           {tradeSignals.length > 0 && (
                               <div className="trade-plan-section">
                                 {tradeSignals.map((item) => {
@@ -1825,7 +1841,7 @@ function App() {
                                         </div>
                                       </div>
 
-                                      
+
                                     </div>
                                   );
                                 })}
