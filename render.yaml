@@ -679,6 +679,15 @@ projects:
               - key: INTRADAY_SIGNAL_SCANNER_POLL_SECONDS
                 value: "300"
 
+              - key: MARKET_TIMEZONE
+                value: Asia/Kolkata
+
+              - key: MARKET_OPEN_TIME
+                value: "09:15"
+
+              - key: MARKET_CLOSE_TIME
+                value: "15:30"
+
               - fromGroup: eventalpha-signal-config
 
           # ========================================================

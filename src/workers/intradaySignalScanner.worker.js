@@ -8,6 +8,9 @@ import {
 import {
   runIntradaySignalScannerCycle
 } from "../services/intradaySignalScanner.service.js";
+import {
+  isMarketSessionActive
+} from "../config/marketSession.js";
 
 async function startWorker() {
   await connectMongo();
@@ -23,7 +26,37 @@ async function startWorker() {
     "Intraday signal scanner worker started"
   );
 
+  let marketWasClosed = false;
+
   while (true) {
+    if (!isMarketSessionActive()) {
+      if (!marketWasClosed) {
+        console.log(
+          "Intraday signal scanner paused: MARKET_CLOSED"
+        );
+      }
+
+      marketWasClosed = true;
+
+      await new Promise(
+        (resolve) =>
+          setTimeout(
+            resolve,
+            pollIntervalMilliseconds
+          )
+      );
+
+      continue;
+    }
+
+    if (marketWasClosed) {
+      console.log(
+        "Intraday signal scanner resumed: MARKET_OPEN"
+      );
+    }
+
+    marketWasClosed = false;
+
     try {
       const result =
         await runIntradaySignalScannerCycle();
