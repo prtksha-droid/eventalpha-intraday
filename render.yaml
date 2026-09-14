@@ -134,12 +134,6 @@ projects:
               - key: MARKET_TIMEZONE
                 value: Asia/Kolkata
 
-              - key: MARKET_OPEN_TIME
-                value: "09:15"
-
-              - key: MARKET_CLOSE_TIME
-                value: "15:30"
-
               - key: TRADE_PLAN_LAST_ENTRY_TIME
                 value: "14:45"
 
@@ -199,6 +193,12 @@ projects:
 
               - key: API_OPERATIONAL_ROUTES_ENABLED
                 value: "false"
+
+              - key: MARKET_OPEN_TIME
+                value: "09:15"
+
+              - key: MARKET_CLOSE_TIME
+                value: "15:30"
 
               - key: PORT
                 value: "10000"
